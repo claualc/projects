@@ -1,4 +1,4 @@
-function [ h ] = Copy_of_measurementModel(parameters,UE,AP,TYPE)
+function [ h ] = measurementModel(parameters,UE,AP,TYPE)
 
 %% compute the distance between UE and APs
 distanceUEAP = sqrt( sum( [UE - AP].^2 , 2 ) ); 
