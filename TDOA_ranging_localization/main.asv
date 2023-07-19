@@ -54,38 +54,27 @@ sgtitle('TDOA Measurements of Different Tags Before and After Data Prep');
 
 
 %% MODEL 1 NCP: EFK and KF
+figsid = 10;
 MODEL = 'NCP';
 
-NCP_paths_EKF = {}; % final coordenates of the EFK algo
-NCP_paths_KF = {};  % final coordenates of the KF algo
-tags = [2,3,4]; % each tag represents one of the sensors of motion
-
-% figure parameters
-figsid = 10;
+NCP_paths_EKF = {};
+NCP_paths_KF = {};
+tags = [2,3,4];
 subTitle= sprintf("sigmaTDOA=%.1f sigmaQ=%.1f", parameters.sigmaTDOA,parameters.sigmaQ);
-
-% Compute the path obtained by EFK and Kf for each one of the tags
 for id=1:length(tags)
     tag = tags(id);
     rho_tag = rho{tag};
     parameters.simulationTime = length(rho_tag); %s
-
-    %%% EFK
     [F,R,Q,UE_init,UE_init_COV,x_hat,P_hat] = NCP(parameters);
     [xhat_NCP_EKF] =EKF(parameters,F,R,Q,UE_init,UE_init_COV,x_hat,P_hat,rho_tag,AP,MODEL);
     NCP_paths_EKF{tag}=xhat_NCP_EKF;
 
-    %%% KF
+     % R ->covariance metrix of the meassurements
     [xhat_NCP_KF] =KF(parameters,F,R,Q,UE_init,UE_init_COV,x_hat,P_hat,rho_tag,AP,MODEL);
     NCP_paths_KF{tag}=xhat_NCP_KF;
-
     
-    %{ 
-        For a specific tag compare how the the path calculated changes
-        chaning the simulations parameters such as the variance Q of the
-        covariance matrix
-    %} 
     if tag==2
+        % Evaluate how the TDOA sigma affects the estimated path
         sigma_values = [.5,2,4];
         path_of_sigma = {};
         TYPE = "TDOA";

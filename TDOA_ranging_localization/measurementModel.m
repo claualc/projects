@@ -1,12 +1,12 @@
-function [ h ] = measurementModel(parameters,UE,AP)
+function [ h ] = measurementModel(parameters,UE,AP,TYPE)
+
+%% compute the distance between UE and APs
+distanceUEAP = sqrt( sum( [UE - AP].^2 , 2 ) ); 
 
 %% build the vector/matrix of observation
-h = []; % 1 x numberOfAP - 1
+h  = [];
 for a = 1:parameters.numberOfAP
-    if a ~= parameters.mainSTA
-        distToMain = sqrt(sum([UE - AP(parameters.mainSTA,:)].^2,2));
-        distToSTA = sqrt(sum([UE - AP(a,:)].^2,2));
-        TDOA = distToSTA - distToMain;
-        h = [h; TDOA];
+    if a~= parameters.mainSTA
+        h = [h,distanceUEAP(a)-distanceUEAP(parameters.mainSTA)];
     end
 end
