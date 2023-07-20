@@ -11,8 +11,8 @@ parameters.samplingTime = 5; %s
 
 parameters.numberOfAP = 6;
 parameters.mainSTA = 2;
-parameters.sigmaTDOA = .5; %m
-parameters.sigma_driving = 0.1; % m/s^2
+parameters.sigmaTDOA = 0.5; %m
+parameters.sigma_driving = 0.5; % m/s^2
 
 %% Load and Analyzing Data
 load('Project_data.mat');
@@ -56,9 +56,9 @@ sgtitle('TDOA Measurements of Different Tags Before and After Data Prep');
 %{ 
     EFK is due to not linear meassurements and gaussian noise
 %}
-MODEL = 'NCP';
-parameters.sigma_driving = 0.0001; % m/s^2
-parameters.sigmaQ = 5; % m
+MODEL = 'NCV';
+parameters.sigma_driving = 0.00001; % m/s^2
+parameters.sigmaQ = 0.5; % m
 
 NCP_paths_EKF = {}; % final coordenates of the EFK algo
 tags = [1,2,3,4]; % each tag represents one of the motion sensors
@@ -97,7 +97,7 @@ tag=2;
 % model being computed
 
 
-Q_values = [0.5, 0.001, 0.00001]; %m (for the NCP)
+Q_values = [1,0.5, 0.001, 0.00001]; %m (for the NCP)
 if MODEL == 'NCV'
     % actually, sigmanDriving values
     Q_values = [0.001,0.00000001,0.0000000000001,0.00000000000000001]; %m
@@ -124,7 +124,7 @@ tittle = 'Q Variations NCP - EKF';
 if MODEL == 'NCV'
         tittle = 'SigmaDriving Variations NCV - EKF';
 end
-plotSigmaTests(parameters, Q_values, path_of_sigma,xhat_NCP,AP, 'Q Variations NCP - EKF',MODEL);
+plotSigmaTests(parameters, Q_values, path_of_sigma,xhat_NCP,AP, tittle,MODEL);
 hold off;
 
 

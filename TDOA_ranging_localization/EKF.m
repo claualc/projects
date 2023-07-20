@@ -38,12 +38,13 @@ function [x_hat] = EKF(parameters,F,R,Q,UE_init,UE_init_COV,x_hat,P_hat,rho,AP,M
             if time == 1 && show_plots == true
                 plotCovariance( P_pred  , x_pred(1) , x_pred(2)  , 3 , 'Prior');
                 plotCovariance( P_hat(:,:,time)  , x_hat(time,1) , x_hat(time,2)  , 3 , 'Update');
+                plot( x_hat(time,1) , x_hat(time,2) , 'o','MarkerSize',12, 'MarkerFaceColor','cyan','MarkerEdgeColor','cyan','DisplayName', 'First Move');
             end
         end
-        %plot( x_hat(:,1) , x_hat(:,2) , '-o','MarkerSize',10,'MarkerEdgeColor',[0.30,0.75,0.93],'MarkerFaceColor',[0.50,0,0] );
+        
     end
     if show_plots == true
-          plot( x_hat(:,1) , x_hat(:,2) , '-o','MarkerIndices',1:20:parameters.simulationTime, 'DisplayName', name); 
+          plot( x_hat(:,1) , x_hat(:,2) , '-o','MarkerIndices',1:20:parameters.simulationTime, 'DisplayName', name,'Color','blue'); 
           legend('show');
           hold off;
     end
