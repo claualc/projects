@@ -95,20 +95,22 @@ plotTrayectories(parameters,AP,tags,NCP_paths_EKF, tittle);
 tag=2;
 % can represent the Q values or the sigma drving values dependening on the
 % model being computed
-Q_values = [.5,1, 10, 100, 0.00001, 0,0005]; %m
+
+% NCV sigmaDriving values change
+Q_values = [0.001,0.00000001,0.0000000000001,0.00000000000000001]; %m
 
 rho_tag = rho{tag};
 parameters.simulationTime = length(rho_tag); %s
 for sigId =1:length(Q_values)
 
     parameters.sigmaQ = Q_values(sigId);
-    
-
-    hold on;
     [F,R,Q,UE_init,UE_init_COV,x_hat,P_hat] = NCP(parameters);
+
     if MODEL == 'NCV'
         [F,R,Q,UE_init,UE_init_COV,x_hat,P_hat] = NCV(parameters);
+        parameters.sigma_driving = Q_values(sigId);
     end
+
     [xhat_NCP] = EKF(parameters, F,R, Q, UE_init, UE_init_COV, x_hat, P_hat, rho_tag, AP, MODEL,tag,false);
     path_of_sigma{sigId} = xhat_NCP;
 end

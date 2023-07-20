@@ -11,7 +11,7 @@ function [] = plotSigmaTests(parameters, sigma_values, paths,xhat,AP, fig_title,
                 case 'NCP'
                     name =sprintf('Q %.5f Error %.4f', sigma,error);
                 case "NCV"
-                    name =sprintf('Sigma %.5f Error %.4f', sigma,error);
+                    name =sprintf('Sigma %.1e Error %.4f', sigma,error);
             end
             plot(path(:, 1), path(:, 2), '-o', 'MarkerIndices', 1:20:parameters.simulationTime, 'DisplayName', name);
             % plotCovariance( P_pred(:,:,2)  , xhat(1,1) , xhat(1,1)  , 3 , 'Prior');

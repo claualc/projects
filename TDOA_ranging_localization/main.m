@@ -95,7 +95,14 @@ plotTrayectories(parameters,AP,tags,NCP_paths_EKF, tittle);
 tag=2;
 % can represent the Q values or the sigma drving values dependening on the
 % model being computed
-Q_values = [2,.5,0.001,0.000001]; %m
+
+
+Q_values = [0.5, 0.001, 0.00001]; %m (for the NCP)
+if MODEL == 'NCV'
+    % actually, sigmanDriving values
+    Q_values = [0.001,0.00000001,0.0000000000001,0.00000000000000001]; %m
+end
+
 
 rho_tag = rho{tag};
 parameters.simulationTime = length(rho_tag); %s
