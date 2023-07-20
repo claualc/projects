@@ -15,11 +15,11 @@ ee = e*(VV') + repmat(mu,1,NumberOfPoints)';
 
 switch TYPE
     case 'Initialization'
-        plot(ee(:,1), ee(:,2),'color','k');
+        plot(ee(:,1), ee(:,2),'color','k','DisplayName', 'Initialization');
     case 'Prior'
-        plot(ee(:,1), ee(:,2),'color','r');
+        plot(ee(:,1), ee(:,2),'color','r','DisplayName', 'Prior');
     case 'Update'
-        plot(ee(:,1), ee(:,2),'color','g');
+        plot(ee(:,1), ee(:,2),'color','g','DisplayName', 'Update');
 end
 
 end

@@ -1,5 +1,18 @@
-function [x_hat] = EKF(parameters,F,R,Q,UE_init,UE_init_COV,x_hat,P_hat,rho,AP,MODEL)
+function [x_hat] = EKF(parameters,F,R,Q,UE_init,UE_init_COV,x_hat,P_hat,rho,AP,MODEL, tag, show_plots)
     T = parameters.simulationTime;
+
+    if show_plots == true
+           figure();
+        plot(AP(:, 1), AP(:, 2), '^', 'MarkerSize', 10, 'MarkerEdgeColor', 'red', 'MarkerFaceColor', [1 .6 .6],'DisplayName', "AP loc"), hold on;
+        axis equal;
+        xlim([parameters.xmin parameters.xmax]);
+        ylim([parameters.ymin parameters.ymax]);
+        xlabel('[m]'), ylabel('[m]');
+        subTitle= sprintf("sigmaTDOA=%.1f sigmaQ=%.1f", parameters.sigmaTDOA,parameters.sigmaQ);
+        title(sprintf("Path estimated %s -EFK", MODEL),subTitle);
+        name = sprintf("tag %d", tag);
+    end
+
     for time=1:T
         %prediction
         if time == 1
@@ -10,6 +23,7 @@ function [x_hat] = EKF(parameters,F,R,Q,UE_init,UE_init_COV,x_hat,P_hat,rho,AP,M
             P_pred = F * P_hat(:,:,time-1) *F' + Q;
         end
         H = buildJacobianMatrixH(parameters,x_pred(1:2)',AP);
+        
         if MODEL == 'NCV'
             H = [H, zeros(parameters.numberOfAP-1,2)];
         end
@@ -19,5 +33,18 @@ function [x_hat] = EKF(parameters,F,R,Q,UE_init,UE_init_COV,x_hat,P_hat,rho,AP,M
         x_hat(time,:) = x_pred + G*(rho(time,:)' - measurementModel( parameters , x_pred(1:2)' , AP )' );
         P_hat(:,:,time) = P_pred - G * H * P_pred;
 
+        %plot evolution
+        if MODEL == 'NCP'
+            if time == 1 && show_plots == true
+                plotCovariance( P_pred  , x_pred(1) , x_pred(2)  , 3 , 'Prior');
+                plotCovariance( P_hat(:,:,time)  , x_hat(time,1) , x_hat(time,2)  , 3 , 'Update');
+            end
+        end
+        %plot( x_hat(:,1) , x_hat(:,2) , '-o','MarkerSize',10,'MarkerEdgeColor',[0.30,0.75,0.93],'MarkerFaceColor',[0.50,0,0] );
+    end
+    if show_plots == true
+          plot( x_hat(:,1) , x_hat(:,2) , '-o','MarkerIndices',1:20:parameters.simulationTime, 'DisplayName', name); 
+          legend('show');
+          hold off;
     end
 end

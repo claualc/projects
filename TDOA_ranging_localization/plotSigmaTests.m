@@ -1,4 +1,4 @@
-function [] = plotSigmaTests(parameters, sigma_values, paths,AP, fig_title,TYPE)
+function [] = plotSigmaTests(parameters, sigma_values, paths,xhat,AP, fig_title,MODEL)
     figure(),hold on;
     plot(AP(:, 1), AP(:, 2), '^', 'MarkerSize', 10, 'MarkerEdgeColor', 'red', 'MarkerFaceColor', [1 .6 .6],'DisplayName', "AP loc");
     
@@ -7,15 +7,15 @@ function [] = plotSigmaTests(parameters, sigma_values, paths,AP, fig_title,TYPE)
             path = paths{sigId};
             error = sqrt(sum([path(length(path))-path(length(path)-1)].^2,2));
             name ="";
-            switch TYPE
-                case "TDOA"
-                    name =sprintf('SigmaTDOA %.1f Error %.4f', sigma,error);
-                case "Q"
-                    name =sprintf('SigmaQ %.1f Error %.4f', sigma,error);
-                case "sigmaDriving"
-                    name =sprintf('SigmaDriving %.5f Error %.4f', sigma,error);
+            switch MODEL
+                case 'NCP'
+                    name =sprintf('Q %.5f Error %.4f', sigma,error);
+                case "NCV"
+                    name =sprintf('Sigma %.5f Error %.4f', sigma,error);
             end
             plot(path(:, 1), path(:, 2), '-o', 'MarkerIndices', 1:20:parameters.simulationTime, 'DisplayName', name);
+            % plotCovariance( P_pred(:,:,2)  , xhat(1,1) , xhat(1,1)  , 3 , 'Prior');
+            % plotCovariance( P_hat(:,:,1)  , xhat(1,1) ,  xhat(1,1), 3 , 'Update');
     end
     xlabel('[m]'), ylabel('[m]');
     xlim([parameters.xmin parameters.xmax]);

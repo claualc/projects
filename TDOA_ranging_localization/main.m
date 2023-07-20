@@ -11,11 +11,10 @@ parameters.samplingTime = 5; %s
 
 parameters.numberOfAP = 6;
 parameters.mainSTA = 2;
-parameters.sigmaQ = 1; % m
 parameters.sigmaTDOA = .5; %m
 parameters.sigma_driving = 0.1; % m/s^2
 
-%% EXTRACT and PROCESS DATA
+%% Load and Analyzing Data
 load('Project_data.mat');
 
 AP =  AP(:,1:2);% ignore z direction
@@ -53,18 +52,20 @@ end
 sgtitle('TDOA Measurements of Different Tags Before and After Data Prep');
 
 
-%% MODEL 1 NCP: EFK and KF
+%% MODEL 1 NCP: EFK 
+%{ 
+    EFK is due to not linear meassurements and gaussian noise
+%}
 MODEL = 'NCP';
+parameters.sigma_driving = 0.0001; % m/s^2
+parameters.sigmaQ = 5; % m
 
 NCP_paths_EKF = {}; % final coordenates of the EFK algo
-NCP_paths_KF = {};  % final coordenates of the KF algo
-tags = [2,3,4]; % each tag represents one of the sensors of motion
-
-% figure parameters
-figsid = 10;
-subTitle= sprintf("sigmaTDOA=%.1f sigmaQ=%.1f", parameters.sigmaTDOA,parameters.sigmaQ);
+tags = [1,2,3,4]; % each tag represents one of the motion sensors
+figsid = 10; % figure parameters
 
 % Compute the path obtained by EFK and Kf for each one of the tags
+
 for id=1:length(tags)
     tag = tags(id);
     rho_tag = rho{tag};
@@ -72,115 +73,52 @@ for id=1:length(tags)
 
     %%% EFK
     [F,R,Q,UE_init,UE_init_COV,x_hat,P_hat] = NCP(parameters);
-    [xhat_NCP_EKF] =EKF(parameters,F,R,Q,UE_init,UE_init_COV,x_hat,P_hat,rho_tag,AP,MODEL);
+    if MODEL == 'NCV'
+        [F,R,Q,UE_init,UE_init_COV,x_hat,P_hat] = NCV(parameters);
+    end
+    [xhat_NCP_EKF] =EKF(parameters,F,R,Q,UE_init,UE_init_COV,x_hat,P_hat,rho_tag,AP,MODEL,tag, true);
     NCP_paths_EKF{tag}=xhat_NCP_EKF;
+end
+tittle = sprintf("Path estimated %s-EFK", MODEL);
+plotTrayectories(parameters,AP,tags,NCP_paths_EKF, tittle);
 
-    %%% KF
-    [xhat_NCP_KF] =KF(parameters,F,R,Q,UE_init,UE_init_COV,x_hat,P_hat,rho_tag,AP,MODEL);
-    NCP_paths_KF{tag}=xhat_NCP_KF;
+%{ 
+    For a specific tag compare how the the path calculated changes
+    chaning the simulations parameters such as the variance Q of the
+    covariance matrix
+%} 
 
-    
-    %{ 
-        For a specific tag compare how the the path calculated changes
-        chaning the simulations parameters such as the variance Q of the
-        covariance matrix
-    %} 
-    if tag==2
-        sigma_values = [.5,2,4];
-        path_of_sigma = {};
-        TYPE = "TDOA";
-        for sigId =1:length(sigma_values)
-            % testing different values for sigmaTDOA
-            parameters.sigmaTDOA = sigma_values(sigId);
-            [F,R, Q, UE_init, UE_init_COV, x_hat, P_hat] = NCP(parameters);
-            [xhat_NCP] = EKF(parameters, F,R, Q, UE_init, UE_init_COV, x_hat, P_hat, rho_tag, AP, MODEL);
-            path_of_sigma{sigId} = xhat_NCP;
-        end
-        plotSigmaTests(parameters, sigma_values, path_of_sigma, AP, 'SigmaTDOA Variations NCP - EKF', TYPE);
-        
-        % Evaluate how the Q sigma affects the estimated path
-        path_of_sigma = {};
-        TYPE = "Q";
-        for sigId =1:length(sigma_values)
-            % testing different values for sigmaQ
-            parameters.sigmaQ = sigma_values(sigId);
-            [F,R, Q, UE_init, UE_init_COV, x_hat, P_hat] = NCP(parameters);
-            [xhat_NCP] = EKF(parameters, F,R, Q, UE_init, UE_init_COV, x_hat, P_hat, rho_tag, AP, MODEL);
-            path_of_sigma{sigId} = xhat_NCP;
-        end
-        plotSigmaTests(parameters, sigma_values, path_of_sigma, AP, 'SigmaQ Variations NCP - EKF', TYPE);
+%{ 
+    how the covariance matrix changes the meassurements prior
+%}
+
+tag=2;
+% can represent the Q values or the sigma drving values dependening on the
+% model being computed
+Q_values = [2,.5,0.001,0.000001]; %m
+
+rho_tag = rho{tag};
+parameters.simulationTime = length(rho_tag); %s
+for sigId =1:length(Q_values)
+
+    parameters.sigmaQ = Q_values(sigId);
+    [F,R,Q,UE_init,UE_init_COV,x_hat,P_hat] = NCP(parameters);
+
+    if MODEL == 'NCV'
+        [F,R,Q,UE_init,UE_init_COV,x_hat,P_hat] = NCV(parameters);
+        parameters.sigma_driving = Q_values(sigId);
     end
+
+    [xhat_NCP] = EKF(parameters, F,R, Q, UE_init, UE_init_COV, x_hat, P_hat, rho_tag, AP, MODEL,tag,false);
+    path_of_sigma{sigId} = xhat_NCP;
 end
 
-plotTrayectories(parameters,AP,tags,NCP_paths_EKF,"Path estimated NCP-EFK",subTitle);
-plotTrayectories(parameters,AP,tags,NCP_paths_KF,"Path estimated NCP-KF",subTitle);
-
-%% MODEL 2 NCV
-MODEL = 'NCV';
-
-NCV_paths_EKF = {};
-NCV_paths_KF = {};
-tags = [2,3,4];
-sigmaDrivingValues = [0.001,0.0001,.00001];
-parameters.sigmaTDOA = .5; %m
-parameters.sigma_driving = 0.0001; % m/s^2
-subTitle= sprintf("sigmaTDOA=%.1f sigmaW=%.4f", parameters.sigmaTDOA,parameters.sigma_driving );
-for id=1:length(tags)
-    tag = tags(id);
-    rho_tag = rho{tag};
-    parameters.simulationTime = length(rho_tag); %s
-    [F,R,Q,UE_init,UE_init_COV,x_hat,P_hat] = NCV(parameters);
-    [xhat_NCV_EKF] =EKF(parameters,F,R,Q,UE_init,UE_init_COV,x_hat,P_hat,rho_tag,AP,MODEL);
-    NCV_paths_EKF{tag}=xhat_NCV_EKF;
-
-    [xhat_NCV_KF] =KF(parameters,F,R,Q,UE_init,UE_init_COV,x_hat,P_hat,rho_tag,AP,MODEL);
-    NCV_paths_KF{tag}=xhat_NCV_KF;
-    
-    if tag==2
-        % Evaluate how the TDOA sigma affects the estimated path
-        % % sigma_values = [.5,2,4];
-        % % path_of_sigma = {};
-        % % TYPE = "TDOA";
-        % % for sigId =1:length(sigma_values)
-        % %     % testing different values for sigmaTDOA
-        % %     parameters.sigmaTDOA = sigma_values(sigId);
-        % %     [F,R, Q, UE_init, UE_init_COV, x_hat, P_hat] = NCV(parameters);
-        % %     [xhat_NCV] = EKF(parameters, F,R, Q, UE_init, UE_init_COV, x_hat, P_hat, rho_tag, AP, MODEL);
-        % %     path_of_sigma{sigId} = xhat_NCV;
-        % % end
-        % % plotSigmaTests(parameters, sigma_values, path_of_sigma, AP, 'SigmaTDOA Variations NCV - EKF', TYPE);
-        
-        % Evaluate how the sigma_driving affects the estimated path
-        path_of_sigma = {};
-        TYPE = "sigmaDriving";
-        for sigId =1:length(sigmaDrivingValues)
-            % testing different values for sigmaQ
-            parameters.sigma_driving = sigmaDrivingValues(sigId);
-            [F,R, Q, UE_init, UE_init_COV, x_hat, P_hat] = NCV(parameters);
-            [xhat_NCV] = EKF(parameters, F,R, Q, UE_init, UE_init_COV, x_hat, P_hat, rho_tag, AP, MODEL);
-            path_of_sigma{sigId} = xhat_NCV;
-        end
-        plotSigmaTests(parameters, sigmaDrivingValues, path_of_sigma, AP, 'SigmaQ Variations NCV - EKF', TYPE);
-    end
+tittle = 'Q Variations NCP - EKF';
+if MODEL == 'NCV'
+        tittle = 'SigmaDriving Variations NCV - EKF';
 end
-
-plotTrayectories(parameters,AP,tags,NCV_paths_EKF,"Path estimated NCV-EFK",subTitle);
-plotTrayectories(parameters,AP,tags,NCV_paths_KF,"Path estimated NCV-FK",subTitle);
-
-% figure(4)
-% for tag=1:4
-%     rho_tag = rho{tag};
-%     parameters.simulationTime = length(rho_tag); %s
-%     [F,R,Q,UE_init,UE_init_COV,x_hat,P_hat] = NCV(parameters);
-%     [xhat_NCV] =EKF(parameters,F,R,Q,UE_init,UE_init_COV,x_hat,P_hat,rho_tag,AP,MODEL);
-%     % display
-%     plotTrayectory(parameters, AP, xhat_NCV)
-% end
-
-%% PLOT ALL TRAYECTORies
-% figure(13),hold on
-% plotTrayectory(parameters, AP, xhat_NCP)
-% plotTrayectory(parameters, AP, xhat_NCV)
+plotSigmaTests(parameters, Q_values, path_of_sigma,xhat_NCP,AP, 'Q Variations NCP - EKF',MODEL);
+hold off;
 
 
 

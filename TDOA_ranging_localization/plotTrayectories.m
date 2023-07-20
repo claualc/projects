@@ -1,4 +1,4 @@
-function [] = plotTrayectories(parameters,AP,tags, trayectories,fig_title,fig_subtitle)
+function [] = plotTrayectories(parameters,AP,tags, trayectories,fig_title)
     figure();
     plot( AP(:,1) , AP(:,2) , '^','MarkerSize',10,'MarkerEdgeColor','red','MarkerFaceColor',[1 .6 .6]), hold on
 
@@ -14,7 +14,8 @@ function [] = plotTrayectories(parameters,AP,tags, trayectories,fig_title,fig_su
     axis equal;
     grid on;
     legend('show');
-    [t,s] = title(fig_title,fig_subtitle);
+    subTitle= sprintf("sigmaTDOA=%.1f sigmaQ=%.1f", parameters.sigmaTDOA,parameters.sigmaQ);
+    [t,s] = title(fig_title,subTitle);
     t.FontSize = 16;
     s.FontAngle = 'italic';
     hold off;
