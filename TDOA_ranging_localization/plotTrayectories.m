@@ -1,4 +1,4 @@
-function [] = plotTrayectories(parameters,AP,tags, trayectories,fig_title)
+function [] = plotTrayectories(parameters,AP,tags, trayectories,fig_title,MODEL)
     figure();
     plot( AP(:,1) , AP(:,2) , '^','MarkerSize',10,'MarkerEdgeColor','red','MarkerFaceColor',[1 .6 .6]), hold on
 
@@ -7,7 +7,9 @@ function [] = plotTrayectories(parameters,AP,tags, trayectories,fig_title)
         name = sprintf("tag %d", tag);
         path = trayectories{tag};
         plot( path(:,1) , path(:,2) , '-o','MarkerIndices',1:20:parameters.simulationTime, 'DisplayName', name);     
+        plot( path(1,1) , path(1,2) , 'o','MarkerSize',7, 'MarkerFaceColor','red','MarkerEdgeColor','red','DisplayName', sprintf('First Move tag %d',tag));
     end
+
     xlabel('[m]'), ylabel('[m]');
     xlim([parameters.xmin parameters.xmax]);
     ylim([parameters.ymin parameters.ymax]);
@@ -15,6 +17,9 @@ function [] = plotTrayectories(parameters,AP,tags, trayectories,fig_title)
     grid on;
     legend('show');
     subTitle= sprintf("sigmaTDOA=%.1f sigmaQ=%.1f", parameters.sigmaTDOA,parameters.sigmaQ);
+    if MODEL == 'NCV'
+        subTitle= sprintf("sigmaTDOA=%.1f sigmaQ=%.1e", parameters.sigmaTDOA,parameters.sigma_driving);
+    end
     [t,s] = title(fig_title,subTitle);
     t.FontSize = 16;
     s.FontAngle = 'italic';

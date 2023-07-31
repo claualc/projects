@@ -2,14 +2,14 @@ function [ H ] = buildJacobianMatrixH(parameters,UE,AP)
     %% build the jacobian matrix for TDOA meassurements
 
      %% compute the distance between UE and APs
-    distanceUEAP = sqrt( sum( [UE - AP].^2 , 2 ) ); 
+    distanceUEAP = sqrt( sum( [UE-AP].^2 , 2 ) ); 
     
     %% evaluate direction cosine
     main = parameters.mainSTA;
     NA = parameters.numberOfAP;
     
-    directionCosineXi = ( UE(1)-AP(:,1) ) ./ distanceUEAP;
-    directionCosineYi = ( UE(2)-AP(:,2) ) ./ distanceUEAP;
+    directionCosineXi = ( UE(1)- AP(:,1) ) ./ distanceUEAP;
+    directionCosineYi = ( UE(2)- AP(:,2)) ./ distanceUEAP;
     
     subDirectionCosineX = [directionCosineXi-directionCosineXi(main)];
     subDirectionCosineY = [directionCosineYi-directionCosineYi(main)];

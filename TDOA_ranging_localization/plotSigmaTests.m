@@ -23,6 +23,7 @@ function [] = plotSigmaTests(parameters, sigma_values, paths,xhat,AP, fig_title,
     axis equal;
     grid on;
     legend('show');
-    title(fig_title);
+    title(fig_title, "tag 2");
+    box on;
     hold off;
 end

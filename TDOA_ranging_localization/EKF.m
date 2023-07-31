@@ -8,7 +8,10 @@ function [x_hat] = EKF(parameters,F,R,Q,UE_init,UE_init_COV,x_hat,P_hat,rho,AP,M
         xlim([parameters.xmin parameters.xmax]);
         ylim([parameters.ymin parameters.ymax]);
         xlabel('[m]'), ylabel('[m]');
-        subTitle= sprintf("sigmaTDOA=%.1f sigmaQ=%.1f", parameters.sigmaTDOA,parameters.sigmaQ);
+        subTitle= sprintf("sigmaTDOA=%.1f sigmaDriv=%.1e", parameters.sigmaTDOA,parameters.sigma_driving);
+        if MODEL == 'NCP'
+            subTitle= sprintf("sigmaTDOA=%.1f sigmaQ=%.1e", parameters.sigmaTDOA,parameters.sigmaQ);
+        end
         title(sprintf("Path estimated %s -EFK", MODEL),subTitle);
         name = sprintf("tag %d", tag);
     end
@@ -25,7 +28,7 @@ function [x_hat] = EKF(parameters,F,R,Q,UE_init,UE_init_COV,x_hat,P_hat,rho,AP,M
         H = buildJacobianMatrixH(parameters,x_pred(1:2)',AP);
         
         if MODEL == 'NCV'
-            H = [H, zeros(parameters.numberOfAP-1,2)];
+            H = [H zeros(parameters.numberOfAP-1,2)];
         end
     
         %update
@@ -37,14 +40,15 @@ function [x_hat] = EKF(parameters,F,R,Q,UE_init,UE_init_COV,x_hat,P_hat,rho,AP,M
         if MODEL == 'NCP'
             if time == 1 && show_plots == true
                 plotCovariance( P_pred  , x_pred(1) , x_pred(2)  , 3 , 'Prior');
-                plotCovariance( P_hat(:,:,time)  , x_hat(time,1) , x_hat(time,2)  , 3 , 'Update');
-                plot( x_hat(time,1) , x_hat(time,2) , 'o','MarkerSize',12, 'MarkerFaceColor','cyan','MarkerEdgeColor','cyan','DisplayName', 'First Move');
+                plotCovariance( P_hat(:,:,1)  , x_hat(1,1) , x_hat(1,2)  , 3 , 'Update');
+                plot( x_pred(1) , x_pred(2) , 'o','MarkerSize',9, 'MarkerFaceColor','red','MarkerEdgeColor','black','DisplayName', 'Init');
             end
         end
         
     end
     if show_plots == true
-          plot( x_hat(:,1) , x_hat(:,2) , '-o','MarkerIndices',1:20:parameters.simulationTime, 'DisplayName', name,'Color','blue'); 
+          plot( x_hat(:,1) , x_hat(:,2) , '-','MarkerIndices',1:20:parameters.simulationTime, 'DisplayName', name,'Color','blue'); 
+          plot( x_hat(1,1) , x_hat(1,2) , 'o','MarkerSize',10, 'MarkerFaceColor','cyan','MarkerEdgeColor','cyan','DisplayName', 'First Move');
           legend('show');
           hold off;
     end
